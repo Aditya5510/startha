@@ -5,7 +5,6 @@ interface Checkin {
   time: string;
   question?: string;
   events?: string[];
-  note?: string;
 }
 
 export default function CheckinList() {
@@ -14,11 +13,17 @@ export default function CheckinList() {
   useEffect(() => {
     async function fetchCheckins() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/checkins`);
-      const data = await res.json();
-      setCheckins(data.checkins);
+      if (res.ok) {
+        const data = await res.json();
+        setCheckins(data.checkins || []);
+      }
     }
     fetchCheckins();
   }, []);
+
+  if (checkins.length === 0) {
+    return <p className="text-gray-500">No check-ins available yet.</p>;
+  }
 
   return (
     <div>
@@ -30,12 +35,13 @@ export default function CheckinList() {
               <strong>{c.time}</strong>
             </div>
             {c.question && <div>{c.question}</div>}
-            {c.note && <div className="text-sm text-gray-500">{c.note}</div>}
             {c.events && (
               <ul className="list-disc list-inside">
-                {c.events.map((e, i) => (
-                  <li key={i}>{e}</li>
-                ))}
+                {c.events.length > 0 ? (
+                  c.events.map((e, i) => <li key={i}>{e}</li>)
+                ) : (
+                  <li className="text-gray-500">No events for today.</li>
+                )}
               </ul>
             )}
           </li>
